@@ -1,0 +1,72 @@
+version: '3'
+services:
+
+  micro-service-one:
+    image: mbere22/apprendre-image
+    build: 
+      context: ./micro-service-one
+      dockerfile: Dockerfile
+    container_name: container-one
+    depends_on:
+      - micro-service-two
+    ports:
+      - "4001:80"
+    environment:
+      - PORT=80
+      - VIDEO_STORAGE_HOST=container-two
+      - VIDEO_STORAGE_PORT=80
+    restart: "no"
+
+  micro-service-two:
+      image: mbere22/micro-service-two
+      build: 
+        context: ./micro-service-two
+        dockerfile: Dockerfile
+      container_name: container-two
+      depends_on:
+        - micro-service-three
+      ports:
+        - "4002:80"
+      environment:
+        - PORT=80
+      restart: "no"
+
+  micro-service-three:
+    image: postgres:alpine
+    container_name: container-three
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=db_one
+    volumes:
+      - ./micro-service-three:/var/lib/postgresql/data
+    ports:
+      - "4003:5432"    
+    restart: "always"
+
+  micro-service-four:
+    image: mbere22/micro-service-four
+    build: 
+        context: ./micro-service-four
+        dockerfile: Dockerfile:dev
+    container_name: container-four
+    volumes:
+      - /tmp/micro-service-four/npm-cache:/root/.npm:z
+      - ./micro-service-four/src:/usr/src/app/src:z 
+    ports:
+      - "4004:80"
+    environment:
+      - PORT=80
+    restart: "no"
+  
+  micro-service-five:
+    image: rabbitmq:3.8.5-management
+    container_name: container-five
+    ports:
+      - "4005:5672"
+      - "4055:15672"
+    expose:
+      - "5672"
+      - "15672"
+    restart: always
+
